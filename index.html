@@ -6,13 +6,32 @@
         stroke: black;
     }
 </style>
+<script>
+    dataFile = 'https://trotyltn.github.io/cs416_d3_dash/API_SP.POP.TOTL_DS2_en_csv_v2_1584446.csv';
+    metadataFile = 'https://trotyltn.github.io/cs416_d3_dash/Metadata_Country_API_SP.POP.TOTL_DS2_en_csv_v2_1584446.csv'
+
+    var popData = [];
+    var countryData = [];
+
+    d3.csv(dataFile).then((data) => {
+        for (let i = 0; i < data.length; i++) {
+            popData.push(new Map(Object.entries(data[i])));
+        }
+    });
+    d3.csv(metadataFile).then((data) => {
+        for (let i = 0; i < data.length; i++) {
+            countryData.push(new Map(Object.entries(data[i])));
+        }
+    });
+</script>
 
 <body onload='init()'>
     <svg width=1000 height=800>
     </svg>
     <script>
         async function init() {
-
+            console.log(popData);
+            console.log(countryData);
         }
     </script>
 </body>
