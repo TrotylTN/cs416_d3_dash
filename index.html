@@ -7,6 +7,11 @@
   }
 </style>
 <script async>
+
+  function getRegionId(region) {
+    return region.replaceAll(' ', '').replaceAll('&', '').replaceAll('-', '');
+  }
+
   const dataFile = 'https://trotyltn.github.io/cs416_d3_dash/API_SP.POP.TOTL_DS2_en_csv_v2_1584446.csv';
   const metadataFile = 'https://trotyltn.github.io/cs416_d3_dash/Metadata_Country_API_SP.POP.TOTL_DS2_en_csv_v2_1584446.csv'
 
@@ -44,7 +49,7 @@
   });
   dataCompletePromise = Promise.all([popPromise, metadataPromise]).then(() => {
     countryPopData = popData.filter(d => countryMap.get(d['Country Code']));
-  }).then(() => {
+
     for (let d of countryPopData) {
       rd = regionPopData.get(countryMap.get(d['Country Code']));
       for (let y = 1960; y <= 2023; y++) {
@@ -64,7 +69,7 @@
       console.log(countryPopData);
       console.log(regionPopData);
 
-      var margin = { top: 10, right: 10, bottom: 20, left: 90 };
+      var margin = { top: 10, right: 10, bottom: 10, left: 90 };
       var width = 1000 - margin.left - margin.right;
       var height = 800 - margin.top - margin.bottom;
 
@@ -88,6 +93,20 @@
         .range([height, 0]);
       svg.append("g")
         .call(d3.axisLeft(popScale));
+
+      for (let region of regions) {
+        svg.append("path")
+          .datum(Object.entries(regionPopData.get(region)))
+          .attr("fill", "none")
+          .attr("stroke", "steelblue")
+          .attr("stroke-width", 1.5)
+          .attr('id', getRegionId(region))
+          .attr('class', getRegionId(region))
+          .attr("d", d3.line()
+            .x(function (d) { return yearScale(d[0]) })
+            .y(function (d) { return popScale(d[1]) })
+          );
+      }
     });
   </script>
 </body>
