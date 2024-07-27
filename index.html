@@ -1,83 +1,188 @@
 <html>
+
 <head>
-<script src='https://d3js.org/d3.v6.min.js'></script>
-<link rel="stylesheet" href="https://www.mingcns.com/assets/forum.css">
-<style>
-  circle {
-    fill: lightblue;
-    stroke: black;
-  }
-</style>
-<script async>
-
-  function getRegionId(region) {
-    return region.replaceAll(' ', '').replaceAll('&', '').replaceAll('-', '');
-  }
-
-  const dataFile = 'https://trotyltn.github.io/cs416_d3_dash/API_SP.POP.TOTL_DS2_en_csv_v2_1584446.csv';
-  const metadataFile = 'https://trotyltn.github.io/cs416_d3_dash/Metadata_Country_API_SP.POP.TOTL_DS2_en_csv_v2_1584446.csv'
-
-  const regions = [
-    'East Asia & Pacific',
-    'Europe & Central Asia',
-    'Latin America & Caribbean',
-    'Middle East & North Africa',
-    'North America',
-    'South Asia',
-    'Sub-Saharan Africa',
-  ];
-
-  var popData = [];
-  var countryMap = new Map();
-  var countryPopData = [];
-
-  var regionPopData = new Map();
-  for (let r of regions) {
-    regionPopData.set(r, new Object());
-    for (let y = 1960; y <= 2023; y++) {
-      regionPopData.get(r)[y] = 0;
+  <script src='https://d3js.org/d3.v6.min.js'></script>
+  <link rel="stylesheet" href="https://www.mingcns.com/assets/forum.css">
+  <style>
+    circle {
+      fill: lightblue;
+      stroke: black;
     }
-  }
+  </style>
+  <script async>
 
-  popPromise = d3.csv(dataFile).then((data) => {
-    for (let i = 0; i < data.length; i++) {
-      popData.push(data[i]);
+    function getRegionId(region) {
+      return region.replaceAll(' ', '').replaceAll('&', '').replaceAll('-', '');
     }
-  });
-  metadataPromise = d3.csv(metadataFile).then((data) => {
-    for (let i = 0; i < data.length; i++) {
-      countryMap.set(data[i]['Country Code'], data[i]['Region']);
-    }
-  });
-  dataCompletePromise = Promise.all([popPromise, metadataPromise]).then(() => {
-    countryPopData = popData.filter(d => countryMap.get(d['Country Code']));
 
-    for (let d of countryPopData) {
-      rd = regionPopData.get(countryMap.get(d['Country Code']));
+    const dataFile = 'https://trotyltn.github.io/cs416_d3_dash/API_SP.POP.TOTL_DS2_en_csv_v2_1584446.csv';
+    const metadataFile = 'https://trotyltn.github.io/cs416_d3_dash/Metadata_Country_API_SP.POP.TOTL_DS2_en_csv_v2_1584446.csv'
+
+    const regions = [
+      'East Asia & Pacific',
+      'Europe & Central Asia',
+      'Latin America & Caribbean',
+      'Middle East & North Africa',
+      'North America',
+      'South Asia',
+      'Sub-Saharan Africa',
+    ];
+    const regionColors = {
+      'East Asia & Pacific': '#00FFFF',
+      'Europe & Central Asia': '#FFD300',
+      'Latin America & Caribbean': 'blue',
+      'Middle East & North Africa': 'green',
+      'North America': 'purple',
+      'South Asia': 'black',
+      'Sub-Saharan Africa': 'red',
+    }
+    
+
+    var popData = [];
+    var countryMap = new Map();
+    var countryPopData = [];
+
+    var regionPopData = new Map();
+    var totalPopData = [];
+    for (let r of regions) {
+      regionPopData.set(r, new Object());
       for (let y = 1960; y <= 2023; y++) {
-        if (d[y]) {
-          rd[y] += Number(d[y]);
-        }
+        regionPopData.get(r)[y] = 0;
       }
     }
-  });
-</script>
+    for (let y = 1960; y <= 2023; y++) {
+      totalPopData[y] = 0;
+    }
+
+    popPromise = d3.csv(dataFile).then((data) => {
+      for (let i = 0; i < data.length; i++) {
+        popData.push(data[i]);
+      }
+    });
+    metadataPromise = d3.csv(metadataFile).then((data) => {
+      for (let i = 0; i < data.length; i++) {
+        countryMap.set(data[i]['Country Code'], data[i]['Region']);
+      }
+    });
+    dataCompletePromise = Promise.all([popPromise, metadataPromise]).then(() => {
+      countryPopData = popData.filter(d => countryMap.get(d['Country Code']));
+
+      for (let d of countryPopData) {
+        rd = regionPopData.get(countryMap.get(d['Country Code']));
+        for (let y = 1960; y <= 2023; y++) {
+          if (d[y]) {
+            rd[y] += Number(d[y]);
+            totalPopData[y] += Number(d[y]);
+          }
+        }
+      }
+    });
+  </script>
 </head>
 
 <body>
   <h1 id="title"></h1>
+  <button id="action-button" style="display: none;"></button>
   <div id="dataviz"></div>
   <script>
     dataCompletePromise.then(() => {
       console.log(countryMap);
       console.log(countryPopData);
       console.log(regionPopData);
+      console.log(totalPopData);
 
       var margin = { top: 20, right: 10, bottom: 20, left: 90 };
       var width = 1000 - margin.left - margin.right;
       var height = 800 - margin.top - margin.bottom;
 
-      drawRegionLineChart();
+      drawWorldLineChart();
+
+      function drawWorldLineChart() {
+        d3.select("#title").selectAll("*").remove();
+        d3.select("#dataviz").selectAll("*").remove();
+
+        d3.select("#title").text("World Population from 1960 to 2023");
+
+        var svg = d3.select("#dataviz")
+          .append("svg")
+          .attr("width", width + margin.left + margin.right)
+          .attr("height", height + margin.top + margin.bottom)
+          .style("overflow", "visible")
+          .on("pointerenter pointermove", pointermoved)
+          .on("pointerleave", pointerleft)
+          .on("touchstart", event => event.preventDefault())
+        var lineChart = svg.append("g")
+          .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+        var yearScale = d3.scaleLinear()
+          .domain([1960, 2023])
+          .range([0, width]);
+        lineChart.append("g")
+          .attr("transform", "translate(0," + height + ")")
+          .call(d3.axisBottom(yearScale).tickFormat(d3.format("0")));
+
+        var maxPop = Math.max(...Object.values(totalPopData));
+        var popScale = d3.scaleLinear()
+          .domain([0, maxPop])
+          .range([height, 0]);
+        lineChart.append("g")
+          .call(d3.axisLeft(popScale).ticks(height / 80))
+          .call(g => g.select(".domain").remove())
+          .call(g => g.selectAll(".tick line").clone()
+            .attr("x2", width)
+            .attr("stroke-opacity", 0.1));
+
+        lineChart.append("path")
+          .datum(Object.entries(totalPopData))
+          .attr("fill", "none")
+          .attr("stroke", "steelblue")
+          .attr("stroke-width", 3)
+          .attr('id', 'World')
+          .attr('class', 'World')
+          .attr("d", d3.line()
+            .x(function (d) { return yearScale(d[0]) })
+            .y(function (d) { return popScale(d[1]) })
+          );
+
+        const tooltip = lineChart.append("g");
+
+        function pointermoved(event) {
+          eventx = d3.pointer(event)[0] - margin.left;
+          year = Math.round(yearScale.invert(eventx));
+          if (year < 1960) year = 1960;
+          if (year > 2023) year = 2023;
+
+          tooltip.style("display", null);
+          tooltip.attr("transform", `translate(${yearScale(year)},${popScale(totalPopData[year])})`);
+
+          const path = tooltip.selectAll("path")
+            .data([,])
+            .join("path")
+            .attr("fill", "white")
+            .attr("stroke", "black");
+
+          const text = tooltip.selectAll("text")
+            .data([,])
+            .join("text")
+            .call(text => text
+              .selectAll("tspan")
+              .data([
+                `${year} Population`,
+                `${totalPopData[year].toLocaleString()}`])
+              .join("tspan")
+              .attr("x", 0)
+              .attr("y", (_, i) => `${i * 1.1}em`)
+              .attr("font-weight", (_, i) => i ? null : "bold")
+              .text(d => d));
+          const { x, y, width: w, height: h } = text.node().getBBox();
+          text.attr("transform", `translate(${-w / 2},${15 - y})`);
+          path.attr("d", `M${-w / 2 - 10},5H-5l5,-5l5,5H${w / 2 + 10}v${h + 20}h-${w + 20}z`);
+        }
+
+        function pointerleft() {
+          tooltip.style("display", "none");
+        }
+      }
 
       function drawRegionLineChart() {
         d3.select("#title").selectAll("*").remove();
@@ -107,7 +212,6 @@
         var popScale = d3.scaleLinear()
           .domain([0, maxRegionPop])
           .range([height, 0]);
-
         lineChart.append("g")
           .call(d3.axisLeft(popScale).ticks(height / 40))
           .call(g => g.select(".domain").remove())
@@ -125,8 +229,8 @@
           lineChart.append("path")
             .datum(Object.entries(regionPopData.get(region)))
             .attr("fill", "none")
-            .attr("stroke", "steelblue")
-            .attr("stroke-width", 1.5)
+            .attr("stroke", regionColors[region])
+            .attr("stroke-width", 2)
             .attr('id', getRegionId(region))
             .attr('class', getRegionId(region))
             .attr("d", d3.line()
