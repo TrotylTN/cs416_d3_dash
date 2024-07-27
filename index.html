@@ -45,7 +45,7 @@
       'South Asia': 'black',
       'Sub-Saharan Africa': 'red',
     }
-    
+
 
     var popData = [];
     var countryMap = new Map();
@@ -123,6 +123,7 @@
           .attr("width", width + margin.left + margin.right)
           .attr("height", height + margin.top + margin.bottom)
           .style("overflow", "visible")
+          .on("click", clickToDetail)
           .on("pointerenter pointermove", pointermoved)
           .on("pointerleave", pointerleft)
           .on("touchstart", event => event.preventDefault())
@@ -160,6 +161,15 @@
           );
 
         const tooltip = lineChart.append("g");
+
+        function clickToDetail(event) {
+          eventx = d3.pointer(event)[0] - margin.left;
+          year = Math.round(yearScale.invert(eventx));
+          if (year < 1960) year = 1960;
+          if (year > 2023) year = 2023;
+
+          drawWorldTop20Chart(year);
+        }
 
         function pointermoved(event) {
           eventx = d3.pointer(event)[0] - margin.left;
@@ -214,6 +224,7 @@
           .attr("width", width + margin.left + margin.right)
           .attr("height", height + margin.top + margin.bottom)
           .style("overflow", "visible")
+          .on("click", clickToDetail)
           .on("pointerenter pointermove", pointermoved)
           .on("pointerleave", pointerleft)
           .on("touchstart", event => event.preventDefault())
@@ -260,6 +271,24 @@
 
         const tooltip = lineChart.append("g");
 
+        function clickToDetail(event) {
+          eventx = d3.pointer(event)[0] - margin.left;
+          eventy = d3.pointer(event)[1] - margin.top;
+          year = Math.round(yearScale.invert(eventx));
+          if (year < 1960) year = 1960;
+          if (year > 2023) year = 2023;
+          pop = Math.round(popScale.invert(eventy));
+          closestRegion = { 'name': 'N/A', 'pop': 0, 'diff': Number.MAX_SAFE_INTEGER };
+          for (let region of regions) {
+            diff = Math.abs(pop - regionPopData.get(region)[year]);
+            if (diff < closestRegion['diff']) {
+              closestRegion = { 'name': region, 'pop': regionPopData.get(region)[year], 'diff': diff };
+            }
+          }
+
+          drawRegionTop20Chart(closestRegion['name'], year);
+        }
+
         function pointermoved(event) {
           eventx = d3.pointer(event)[0] - margin.left;
           eventy = d3.pointer(event)[1] - margin.top;
@@ -305,6 +334,28 @@
         function pointerleft() {
           tooltip.style("display", "none");
         }
+      }
+
+      function drawRegionTop20Chart(regionName, year) {
+        d3.select("#title").selectAll("*").remove();
+        d3.select("#dataviz").selectAll("*").remove();
+
+        d3.select("#title").text(`${regionName} Top 20 Countries by Population in ${year}`);
+        d3.select("#action-button")
+          .text("Go back to region view")
+          .style("display", null)
+          .on("click", drawRegionLineChart);
+      }
+
+      function drawWorldTop20Chart(year) {
+        d3.select("#title").selectAll("*").remove();
+        d3.select("#dataviz").selectAll("*").remove();
+
+        d3.select("#title").text(`Top 20 Countries by Population in ${year}`);
+        d3.select("#action-button")
+          .text("Go back to world view")
+          .style("display", null)
+          .on("click", drawWorldLineChart);
       }
     });
   </script>
