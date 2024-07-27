@@ -37,13 +37,13 @@
       'Sub-Saharan Africa',
     ];
     const regionColors = {
-      'East Asia & Pacific': '#00FFFF',
-      'Europe & Central Asia': '#FFD300',
-      'Latin America & Caribbean': 'blue',
+      'East Asia & Pacific': '#33979e',
+      'Europe & Central Asia': '#ebc928',
+      'Latin America & Caribbean': '#6e91fa',
       'Middle East & North Africa': 'green',
       'North America': 'purple',
       'South Asia': 'black',
-      'Sub-Saharan Africa': 'red',
+      'Sub-Saharan Africa': '#fca9a9',
     }
 
 
@@ -98,7 +98,7 @@
   <script>
     dataCompletePromise.then(() => {
       // console.log(countryMap);
-      console.log(countryPopData);
+      // console.log(countryPopData);
       // console.log(regionPopData);
       // console.log(totalPopData);
 
@@ -139,14 +139,20 @@
 
         var maxPop = Math.max(...Object.values(totalPopData));
         var popScale = d3.scaleLinear()
-          .domain([0, maxPop])
+          .domain([0, maxPop * 1.1])
           .range([height, 0]);
         lineChart.append("g")
           .call(d3.axisLeft(popScale).ticks(height / 80))
           .call(g => g.select(".domain").remove())
           .call(g => g.selectAll(".tick line").clone()
             .attr("x2", width)
-            .attr("stroke-opacity", 0.1));
+            .attr("stroke-opacity", 0.1))
+          .call(g => g.append("text")
+            .attr("x", -margin.left)
+            .attr("y", 10)
+            .attr("fill", "currentColor")
+            .attr("text-anchor", "start")
+            .text("Total Population"));
 
         lineChart.append("path")
           .datum(Object.entries(totalPopData))
@@ -242,7 +248,7 @@
 
         var maxRegionPop = Math.max(...regionPopData.values().map(d => Math.max(...Object.values(d))));
         var popScale = d3.scaleLinear()
-          .domain([0, maxRegionPop])
+          .domain([0, maxRegionPop * 1.1])
           .range([height, 0]);
         lineChart.append("g")
           .call(d3.axisLeft(popScale).ticks(height / 40))
@@ -354,7 +360,7 @@
           .map(d => { return { 'name': d['Country Name'], 'pop': Number(d[year]) }; })
           .toSorted((a, b) => b['pop'] - a['pop'])
           .slice(0, 10);
-        console.log(data);
+        // console.log(data);
 
         var svg = d3.select("#dataviz")
           .append("svg")
@@ -372,12 +378,11 @@
           .attr("transform", `translate(0,${height})`)
           .call(d3.axisBottom(countryScale).tickSizeOuter(0));
 
-        console.log(d3.max(data, (d) => d['pop']));
         var popScale = d3.scaleLinear()
-          .domain([0, d3.max(data, (d) => d['pop'])])
+          .domain([0, d3.max(data, (d) => d['pop']) * 1.1])
           .range([height, 0]);
         barChart.append("g")
-          .call(d3.axisLeft(popScale).ticks(height / 80))
+          .call(d3.axisLeft(popScale).ticks(height / 40))
           .call(g => g.select(".domain").remove())
           .call(g => g.selectAll(".tick line").clone()
             .attr("x2", width)
@@ -391,7 +396,16 @@
           .attr("x", (d) => countryScale(d['name']))
           .attr("y", (d) => popScale(d['pop']))
           .attr("height", (d) => popScale(0) - popScale(d['pop']))
-          .attr("width", countryScale.bandwidth());
+          .attr("width", countryScale.bandwidth())
+        barChart.append("g")
+          .attr("fill", regionColors[regionName])
+          .selectAll()
+          .data(data)
+          .join("text")
+          .text((d) => d['pop'].toLocaleString())
+          .attr("x", (d) => countryScale(d['name']) + countryScale.bandwidth() / 2)
+          .attr("y", (d) => popScale(d['pop']) - 5)
+          .attr("text-anchor", "middle");
       }
 
       function drawWorldTop10Chart(year) {
