@@ -118,6 +118,8 @@
           .style("display", null)
           .on("click", drawRegionLineChart);
 
+        var mousemoved = false;
+
         var svg = d3.select("#dataviz")
           .append("svg")
           .attr("width", width + margin.left + margin.right)
@@ -168,6 +170,8 @@
 
         const tooltip = lineChart.append("g");
 
+        autoplay(1960);
+
         function clickToDetail(event) {
           eventx = d3.pointer(event)[0] - margin.left;
           year = Math.round(yearScale.invert(eventx));
@@ -177,12 +181,28 @@
           drawWorldTop10Chart(year);
         }
 
+        function autoplay(curr_year) {
+          if (mousemoved) return;
+          displaytooltip(curr_year);
+          new_year = curr_year + 10;
+          if (curr_year == 2023) new_year = 1960;
+          if (curr_year == 2020) new_year = 2023;
+
+          setTimeout(() => autoplay(new_year), 2000);
+        }
+
         function pointermoved(event) {
+          mousemoved = true;
+          console.log("Moved!")
           eventx = d3.pointer(event)[0] - margin.left;
           year = Math.round(yearScale.invert(eventx));
           if (year < 1960) year = 1960;
           if (year > 2023) year = 2023;
+          
+          displaytooltip(year);
+        }
 
+        function displaytooltip(year) {
           tooltip.style("display", null);
           tooltip.attr("transform", `translate(${yearScale(year)},${popScale(totalPopData[year])})`);
 
