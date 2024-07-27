@@ -193,11 +193,13 @@
               .selectAll("tspan")
               .data([
                 `${year} Population`,
-                `${totalPopData[year].toLocaleString()}`])
+                `${totalPopData[year].toLocaleString()}`,
+                'Click to view more details'])
               .join("tspan")
               .attr("x", 0)
-              .attr("y", (_, i) => `${i * 1.1}em`)
-              .attr("font-weight", (_, i) => i ? null : "bold")
+              .attr("y", (_, i) => `${i * 1.2}em`)
+              .attr("font-weight", (_, i) => i ? (i != 2 ? null : "lighter") : "bold")
+              .attr("fill", (_, i) => i != 2 ? null : "grey")
               .text(d => d));
           const { x, y, width: w, height: h } = text.node().getBBox();
           text.attr("transform", `translate(${-w / 2},${15 - y})`);
@@ -320,11 +322,13 @@
               .selectAll("tspan")
               .data([
                 `${closestRegion['name']} ${year}`,
-                `Total Pop: ${closestRegion['pop'].toLocaleString()}`])
+                `Total Pop: ${closestRegion['pop'].toLocaleString()}`,
+                'Click to view more details'])
               .join("tspan")
               .attr("x", 0)
-              .attr("y", (_, i) => `${i * 1.1}em`)
-              .attr("font-weight", (_, i) => i ? null : "bold")
+              .attr("y", (_, i) => `${i * 1.2}em`)
+              .attr("font-weight", (_, i) => i ? (i != 2 ? null : "lighter") : "bold")
+              .attr("fill", (_, i) => i != 2 ? null : "grey")
               .text(d => d));
           const { x, y, width: w, height: h } = text.node().getBBox();
           text.attr("transform", `translate(${-w / 2},${15 - y})`);
