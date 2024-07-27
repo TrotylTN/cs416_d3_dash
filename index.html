@@ -4,9 +4,18 @@
   <script src='https://d3js.org/d3.v6.min.js'></script>
   <link rel="stylesheet" href="https://www.mingcns.com/assets/forum.css">
   <style>
-    circle {
+    /* circle {
       fill: lightblue;
       stroke: black;
+    } */
+
+    .header-container {
+      margin-left: 20px;
+      margin-bottom: 8px;
+    }
+
+    .dataviz {
+      margin-left: 8px;
     }
   </style>
   <script async>
@@ -81,9 +90,11 @@
 </head>
 
 <body>
-  <h1 id="title"></h1>
-  <button id="action-button" style="display: none;"></button>
-  <div id="dataviz"></div>
+  <div class="header-container">
+    <h1 id="title"></h1>
+    <button id="action-button" style="display: none;"></button>
+  </div>
+  <div id="dataviz" class="dataviz"></div>
   <script>
     dataCompletePromise.then(() => {
       console.log(countryMap);
@@ -102,6 +113,10 @@
         d3.select("#dataviz").selectAll("*").remove();
 
         d3.select("#title").text("World Population from 1960 to 2023");
+        d3.select("#action-button")
+          .text("View by region")
+          .style("display", null)
+          .on("click", drawRegionLineChart);
 
         var svg = d3.select("#dataviz")
           .append("svg")
@@ -189,6 +204,10 @@
         d3.select("#dataviz").selectAll("*").remove();
 
         d3.select("#title").text("World Population by Region from 1960 to 2023");
+        d3.select("#action-button")
+          .text("Go back to world view")
+          .style("display", null)
+          .on("click", drawWorldLineChart);
 
         var svg = d3.select("#dataviz")
           .append("svg")
