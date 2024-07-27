@@ -114,7 +114,7 @@
 
         d3.select("#title").text("World Population from 1960 to 2023");
         d3.select("#action-button")
-          .text("View by region")
+          .text("View by regions")
           .style("display", null)
           .on("click", drawRegionLineChart);
 
@@ -352,7 +352,7 @@
 
         d3.select("#title").text(`${regionName} Top 10 Countries by Population in ${year}`);
         d3.select("#action-button")
-          .text("Go back to region view")
+          .text("Go back to regions view")
           .style("display", null)
           .on("click", drawRegionLineChart);
 
