@@ -193,7 +193,6 @@
 
         function pointermoved(event) {
           mousemoved = true;
-          console.log("Moved!")
           eventx = d3.pointer(event)[0] - margin.left;
           year = Math.round(yearScale.invert(eventx));
           if (year < 1960) year = 1960;
