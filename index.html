@@ -270,7 +270,7 @@
           .domain([0, maxRegionPop * 1.1])
           .range([height, 0]);
         lineChart.append("g")
-          .call(d3.axisLeft(popScale).ticks(height / 40))
+          .call(d3.axisLeft(popScale).ticks(height / 80))
           .call(g => g.select(".domain").remove())
           .call(g => g.selectAll(".tick line").clone()
             .attr("x2", width)
@@ -412,7 +412,7 @@
 
 
           barChart.append("g")
-            .call(d3.axisLeft(popScale).ticks(height / 40))
+            .call(d3.axisLeft(popScale).ticks(height / 80))
             .call(g => g.select(".domain").remove())
             .call(g => g.selectAll(".tick line").clone()
               .attr("x2", width)
@@ -487,7 +487,7 @@
             .call(d3.axisBottom(countryScale).tickSizeOuter(0));
 
           barChart.append("g")
-            .call(d3.axisLeft(popScale).ticks(height / 40))
+            .call(d3.axisLeft(popScale).ticks(height / 80))
             .call(g => g.select(".domain").remove())
             .call(g => g.selectAll(".tick line").clone()
               .attr("x2", width)
