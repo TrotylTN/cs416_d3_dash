@@ -197,7 +197,7 @@
           year = Math.round(yearScale.invert(eventx));
           if (year < 1960) year = 1960;
           if (year > 2023) year = 2023;
-          
+
           displaytooltip(year);
         }
 
@@ -313,7 +313,7 @@
             }
           }
 
-          drawRegionTop10Chart(closestRegion['name'], year);
+          drawRegionTopChart(closestRegion['name'], year);
         }
 
         function pointermoved(event) {
@@ -365,72 +365,87 @@
         }
       }
 
-      function drawRegionTop10Chart(regionName, year) {
+      function drawRegionTopChart(regionName, year) {
+        var autoRefresh = true;
         d3.select("#title").selectAll("*").remove();
-        d3.select("#dataviz").selectAll("*").remove();
 
-        d3.select("#title").text(`${regionName} Top 10 Countries by Population in ${year}`);
+        d3.select("#title").text(`${regionName} Top Countries by Population in ${year}`);
         d3.select("#action-button")
           .text("Go back to regions view")
           .style("display", null)
-          .on("click", drawRegionLineChart);
+          .on("click", () => {
+            autoRefresh = false;
+            drawRegionLineChart();
+          });
 
-        data = countryPopData.filter(d => (countryMap.get(d['Country Code']) == regionName))
+        allData = countryPopData.filter(d => (countryMap.get(d['Country Code']) == regionName))
           .map(d => { return { 'name': d['Country Name'], 'pop': Number(d[year]) }; })
-          .toSorted((a, b) => b['pop'] - a['pop'])
-          .slice(0, 10);
-
-        var svg = d3.select("#dataviz")
-          .append("svg")
-          .attr("width", width + margin.left + margin.right)
-          .attr("height", height + margin.top + margin.bottom)
-          .style("overflow", "visible");
-        var barChart = svg.append("g")
-          .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-        var countryScale = d3.scaleBand()
-          .domain(d3.groupSort(data, ([d]) => -d['pop'], (d) => d['name']))
-          .range([0, width])
-          .padding(0.3);
-        barChart.append("g")
-          .attr("transform", `translate(0,${height})`)
-          .call(d3.axisBottom(countryScale).tickSizeOuter(0));
-
+          .toSorted((a, b) => b['pop'] - a['pop']);
         var popScale = d3.scaleLinear()
-          .domain([0, d3.max(data, (d) => d['pop']) * 1.1])
+          .domain([0, d3.max(allData, (d) => d['pop']) * 1.1])
           .range([height, 0]);
-        barChart.append("g")
-          .call(d3.axisLeft(popScale).ticks(height / 40))
-          .call(g => g.select(".domain").remove())
-          .call(g => g.selectAll(".tick line").clone()
-            .attr("x2", width)
-            .attr("stroke-opacity", 0.1))
+        console.log(allData);
+        drawWithShift(0);
 
-        barChart.append("g")
-          .attr("fill", regionColors[regionName])
-          .selectAll()
-          .data(data)
-          .join("rect")
-          .attr("x", (d) => countryScale(d['name']))
-          .attr("y", (d) => popScale(d['pop']))
-          .attr("height", (d) => popScale(0) - popScale(d['pop']))
-          .attr("width", countryScale.bandwidth())
-        barChart.append("g")
-          .attr("fill", regionColors[regionName])
-          .selectAll()
-          .data(data)
-          .join("text")
-          .text((d) => d['pop'].toLocaleString())
-          .attr("x", (d) => countryScale(d['name']) + countryScale.bandwidth() / 2)
-          .attr("y", (d) => popScale(d['pop']) - 5)
-          .attr("text-anchor", "middle");
+        function drawWithShift(shift) {
+          if (!autoRefresh) return;
+
+          d3.select("#dataviz").selectAll("*").remove();
+
+          data = allData.slice(shift * 10, shift * 10 + 10);
+
+          var svg = d3.select("#dataviz")
+            .append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .style("overflow", "visible");
+          var barChart = svg.append("g")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+          var countryScale = d3.scaleBand()
+            .domain(d3.groupSort(data, ([d]) => -d['pop'], (d) => d['name']))
+            .range([0, width])
+            .padding(0.3);
+          barChart.append("g")
+            .attr("transform", `translate(0,${height})`)
+            .call(d3.axisBottom(countryScale).tickSizeOuter(0));
+
+
+          barChart.append("g")
+            .call(d3.axisLeft(popScale).ticks(height / 40))
+            .call(g => g.select(".domain").remove())
+            .call(g => g.selectAll(".tick line").clone()
+              .attr("x2", width)
+              .attr("stroke-opacity", 0.1))
+
+          barChart.append("g")
+            .attr("fill", regionColors[regionName])
+            .selectAll()
+            .data(data)
+            .join("rect")
+            .attr("x", (d) => countryScale(d['name']))
+            .attr("y", (d) => popScale(d['pop']))
+            .attr("height", (d) => popScale(0) - popScale(d['pop']))
+            .attr("width", countryScale.bandwidth())
+          barChart.append("g")
+            .attr("fill", regionColors[regionName])
+            .selectAll()
+            .data(data)
+            .join("text")
+            .text((d) => d['pop'].toLocaleString())
+            .attr("x", (d) => countryScale(d['name']) + countryScale.bandwidth() / 2)
+            .attr("y", (d) => popScale(d['pop']) - 5)
+            .attr("text-anchor", "middle");
+
+          setTimeout(() => drawWithShift((shift + 1) % Math.ceil(allData.length / 10)), 5000);
+        }
       }
 
       function drawWorldTop10Chart(year) {
         d3.select("#title").selectAll("*").remove();
         d3.select("#dataviz").selectAll("*").remove();
 
-        d3.select("#title").text(`Top 10 Countries by Population in ${year}`);
+        d3.select("#title").text(`Top Countries by Population in ${year}`);
         d3.select("#action-button")
           .text("Go back to world view")
           .style("display", null)
